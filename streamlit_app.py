@@ -2,32 +2,35 @@ import streamlit as st
 import requests
 import time
 
-# Pares de criptomoedas que queremos monitorar
+# Lista de pares que queremos monitorar
 PAIRS = ["SUIUSDT", "BTCUSDT", "ETHUSDT", "UNIUSDT"]
 
-# URL da API da Binance para consultar os preços dos pares
-BASE_URL = "https://api.binance.com/api/v3/ticker/price"
+# URL da API da Binance para obter os preços
+BINANCE_API_URL = "https://api.binance.com/api/v3/ticker/price"
 
 st.title("Atualização de Preços - Binance")
-st.write("Atualização a cada 10 segundos para os pares:", ", ".join(PAIRS))
+st.write("Atualização a cada 10 segundos")
 
-# Função para obter preços da API da Binance
+# Função para buscar os preços dos pares
 def fetch_prices():
     prices = {}
-    try:
-        for pair in PAIRS:
-            response = requests.get(BASE_URL, params={"symbol": pair})
+    for pair in PAIRS:
+        try:
+            response = requests.get(BINANCE_API_URL, params={"symbol": pair})
             response.raise_for_status()
             data = response.json()
             prices[pair] = data['price']
-    except requests.exceptions.RequestException as e:
-        st.error(f"Erro ao obter dados da API da Binance: {e}")
+        except requests.exceptions.RequestException as e:
+            st.error(f"Erro ao obter preço para {pair}: {e}")
     return prices
 
-# Loop de atualização automática
+# Loop de atualização dos preços
 while True:
     prices = fetch_prices()
     st.subheader("Preços Atualizados")
     for pair, price in prices.items():
         st.write(f"{pair}: {price} USDT")
-    time.sleep(10)  # Pausa de 10 segundos antes de atualizar novamente
+    
+    # Atualiza a cada 10 segundos
+    time.sleep(10)
+    st.experimental_rerun()
